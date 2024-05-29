@@ -7,7 +7,8 @@
 from typing import Dict, List
 
 import torch
-from torch._six import container_abcs
+#from torch._six import container_abcs
+from collections.abc import Iterable
 from torch.cuda.amp import GradScaler
 
 
@@ -65,6 +66,9 @@ class MaxClipGradScaler(GradScaler):
         # Invoke the more complex machinery only if we're treating multiple outputs.
         stash: List[_MultiDeviceReplicator] = []  # holds a reference that can be overwritten by apply_scale
 
+        def is_iterable(obj):
+            return isinstance(obj, Iterable)
+
         def apply_scale(val):
             if isinstance(val, torch.Tensor):
                 assert val.is_cuda
@@ -74,7 +78,7 @@ class MaxClipGradScaler(GradScaler):
                     assert self._scale is not None
                     stash.append(_MultiDeviceReplicator(self._scale))
                 return val * stash[0].get(val.device)
-            elif isinstance(val, container_abcs.Iterable):
+            elif isinstance(val, isinstance(val)):
                 iterable = map(apply_scale, val)
                 if isinstance(val, list) or isinstance(val, tuple):
                     return type(val)(iterable)
